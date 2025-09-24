@@ -9,17 +9,51 @@ body {
 
 #game-container {
     display: flex;
-    gap: 20px;
+    gap: 30px;
     align-items: flex-start;
 }
 
+#board-area {
+    display: grid;
+    grid-template-areas:
+        ". files"
+        "ranks board";
+    grid-template-columns: 20px 1fr;
+    grid-template-rows: 20px 1fr;
+}
+
 #chessboard {
+    grid-area: board;
     width: 640px;
     height: 640px;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
     border: 5px solid #603d28;
+}
+
+#file-labels {
+    grid-area: files;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    font-weight: bold;
+}
+
+#rank-labels {
+    grid-area: ranks;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    font-weight: bold;
+}
+
+#side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 250px;
 }
 
 .square {
@@ -58,6 +92,19 @@ body {
     text-shadow: 0 0 2px #fff;
 }
 
+.piece-hidden {
+    opacity: 0;
+}
+
+.dragging-piece {
+    position: absolute;
+    font-size: 60px; /* Slightly larger */
+    opacity: 0.8;
+    pointer-events: none; /* Allows mouse events to pass through to squares */
+    z-index: 2000;
+    text-shadow: 0 5px 15px rgba(0,0,0,0.4);
+}
+
 .selected {
     background-color: #6a9a6a !important;
 }
@@ -72,6 +119,44 @@ body {
     padding: 20px;
     border-radius: 10px;
     min-width: 200px;
+}
+
+#move-history-panel {
+    background-color: #444;
+    padding: 10px 20px;
+    border-radius: 10px;
+}
+
+#move-list {
+    height: 400px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 16px;
+    background-color: #2d2d2d;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.move-row {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 3px;
+}
+
+.move-number {
+    flex-basis: 30px;
+    flex-shrink: 0;
+    color: #aaa;
+}
+
+.move-white {
+    flex-basis: 80px;
+    flex-shrink: 0;
+}
+
+.move-black {
+    flex-basis: 80px;
+    flex-shrink: 0;
 }
 
 /* Modal Styles */
