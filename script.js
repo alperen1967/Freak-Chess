@@ -60,7 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function init() {
         gameSetupModal.classList.remove('hidden');
         welcomeMessage.classList.remove('hidden');
-        chessboard.addEventListener('mousedown', handleMouseDown);
+        // Add both mouse and touch event listeners
+        chessboard.addEventListener('mousedown', handleDragStart);
+        chessboard.addEventListener('touchstart', handleDragStart, { passive: false });
 
         startSetupBtn.addEventListener('click', () => {
             welcomeMessage.classList.add('hidden');
@@ -212,11 +214,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- DRAG & DROP LOGIC ---
-    function handleMouseDown(e) {
+    // --- DRAG & DROP LOGIC (UNIFIED FOR MOUSE AND TOUCH) ---
+    function handleDragStart(e) {
         if (!isPlayerTurn) return;
+        
         const pieceElement = e.target.closest('.piece');
         if (!pieceElement) return;
+
+        // Prevent page scroll on touch devices
+        if (e.type === 'touchstart') {
+            e.preventDefault();
+        }
 
         originalSquare = pieceElement.parentElement;
         const row = parseInt(originalSquare.dataset.row);
@@ -236,18 +244,27 @@ document.addEventListener('DOMContentLoaded', () => {
         pieceElement.classList.add('piece-hidden');
         highlightValidMoves();
 
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('mousemove', handleDragMove);
+        document.addEventListener('touchmove', handleDragMove, { passive: false });
+
+        document.addEventListener('mouseup', handleDragEnd);
+        document.addEventListener('touchend', handleDragEnd);
     }
 
-    function handleMouseMove(e) {
-        if (draggedElement) positionDraggedElement(e);
+    function handleDragMove(e) {
+        if (draggedElement) {
+            if (e.type === 'touchmove') {
+                e.preventDefault();
+            }
+            positionDraggedElement(e);
+        }
     }
 
-    function handleMouseUp(e) {
+    function handleDragEnd(e) {
         if (!draggedElement) return;
 
-        const targetSquare = getSquareFromCoordinates(e.clientX, e.clientY);
+        const touch = e.changedTouches ? e.changedTouches[0] : e;
+        const targetSquare = getSquareFromCoordinates(touch.clientX, touch.clientY);
         
         if (targetSquare) {
             const toRow = parseInt(targetSquare.dataset.row);
@@ -264,17 +281,26 @@ document.addEventListener('DOMContentLoaded', () => {
         draggedElement = null;
         selectedPiece = null;
         originalSquare = null;
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+
+        document.removeEventListener('mousemove', handleDragMove);
+        document.removeEventListener('touchmove', handleDragMove);
+        document.removeEventListener('mouseup', handleDragEnd);
+        document.removeEventListener('touchend', handleDragEnd);
     }
 
     function positionDraggedElement(e) {
-        draggedElement.style.left = `${e.clientX - draggedElement.offsetWidth / 2}px`;
-        draggedElement.style.top = `${e.clientY - draggedElement.offsetHeight / 2}px`;
+        const touch = e.touches ? e.touches[0] : e;
+        draggedElement.style.left = `${touch.clientX - draggedElement.offsetWidth / 2}px`;
+        draggedElement.style.top = `${touch.clientY - draggedElement.offsetHeight / 2}px`;
     }
 
     function getSquareFromCoordinates(x, y) {
-        return document.elementsFromPoint(x, y).find(el => el.classList.contains('square'));
+        // Hide the dragged element so it doesn't block the detection
+        draggedElement.style.display = 'none';
+        const element = document.elementFromPoint(x, y);
+        // Show it again
+        draggedElement.style.display = '';
+        return element?.closest('.square');
     }
 
     // --- BOARD & MOVE LOGIC ---
@@ -497,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tempBoard[move.r][move.c] = pieceId;
             tempBoard[r][c] = null;
             const kingPos = findKing(kingColor, tempBoard);
-            if (!isSquareAttacked(kingPos.r, kingPos.c, kingColor === 'white' ? 'b' : 'w', tempBoard)) {
+            if (kingPos && !isSquareAttacked(kingPos.r, kingPos.c, kingColor === 'white' ? 'b' : 'w', tempBoard)) {
                 validMoves.push(move);
             }
         }
@@ -506,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getGameStatus(playerColor, currentBoard) {
         const kingPos = findKing(playerColor, currentBoard);
-        if (!kingPos) return 'ongoing'; // Should not happen
+        if (!kingPos) return 'ongoing'; // Should not happen in traditional
 
         const opponentColor = playerColor === 'white' ? 'b' : 'w';
         const inCheck = isSquareAttacked(kingPos.r, kingPos.c, opponentColor, currentBoard);
