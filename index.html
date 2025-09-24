@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dönüşüm Satrancı</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-setup-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="welcome-message">
+                <h2>Merhabalar!</h2>
+                <p>Bu satranç modunun tek kuralı var: <br><strong>Hangi taşı yersen ona dönüşürsün.</strong></p>
+                <button id="start-setup-btn">Anladım, Başla!</button>
+            </div>
+            <div id="mode-selection" class="hidden">
+                <h2>Nasıl Oynamak İstersin?</h2>
+                <button id="vs-ai">Yapay Zekaya Karşı</button>
+                <button id="vs-friend">Arkadaşınla Oyna</button>
+            </div>
+            <div id="difficulty-selection" class="hidden">
+                <h2>Zorluk Seviyesi Seç</h2>
+                <button data-difficulty="easy">Kolay</button>
+                <button data-difficulty="medium">Orta</button>
+                <button data-difficulty="hard">Zor</button>
+            </div>
+            <div id="color-selection" class="hidden">
+                <h2>Hangi Renk Olmak İstersin?</h2>
+                <button data-color="white">Beyaz</button>
+                <button data-color="black">Siyah</button>
+            </div>
+            <div id="king-capture-confirm" class="hidden">
+                <h2>Şahını kaybedeceksin. Emin misin? :)</h2>
+                <button id="confirm-king-capture-yes">Evet</button>
+                <button id="confirm-king-capture-no">Hayır</button>
+            </div>
+            <div id="game-over-message" class="hidden">
+                <h2 id="winner-text"></h2>
+                <button id="new-game-btn">Yeni Oyun</button>
+            </div>
+        </div>
+    </div>
+
+    <h1>Dönüşüm Satrancı</h1>
+    <div id="game-container" class="hidden">
+        <div id="chessboard"></div>
+        <div id="info-panel">
+            <h2 id="turn-info">Beyazın Sırası</h2>
+            <p id="status-message"></p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
