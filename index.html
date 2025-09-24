@@ -18,6 +18,25 @@
                 <h2>Nasıl Oynamak İstersin?</h2>
                 <button id="vs-ai">Yapay Zekaya Karşı</button>
                 <button id="vs-friend">Arkadaşınla Oyna</button>
+                <button id="vs-online">Online Oyna</button>
+            </div>
+            <div id="online-menu" class="hidden">
+                <h2>Online Oyun</h2>
+                <button id="create-room-btn">Oda Kur</button>
+                <button id="join-room-btn">Odaya Katıl</button>
+            </div>
+            <div id="room-created-screen" class="hidden">
+                <h2>Oda Kuruldu!</h2>
+                <p>Bu kodu arkadaşınla paylaş:</p>
+                <strong id="room-code-display"></strong>
+                <p>Rakip bekleniyor...</p>
+            </div>
+            <div id="join-room-screen" class="hidden">
+                <h2>Odaya Katıl</h2>
+                <p>Arkadaşının verdiği kodu gir:</p>
+                <input type="text" id="room-code-input" placeholder="Oda Kodu">
+                <button id="submit-join-btn">Katıl</button>
+                <p id="join-error-msg" style="color: red;"></p>
             </div>
             <div id="difficulty-selection" class="hidden">
                 <h2>Zorluk Seviyesi Seç</h2>
@@ -64,6 +83,7 @@
             </div>
         </div>
     </div>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
