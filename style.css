@@ -102,8 +102,7 @@ h1 {
     -ms-user-select: none;
     user-select: none;
     text-shadow: 0 0 3px rgba(0,0,0,0.7);
-    font-size: 7.5vw; /* Adjusted responsive font size */
-    max-font-size: 50px;
+    font-size: 50px; /* Default font size for desktop */
 }
 
 .piece.w { color: #f8f8f8; }
@@ -117,8 +116,7 @@ h1 {
     pointer-events: none;
     z-index: 2000;
     text-shadow: 0 5px 15px rgba(0,0,0,0.4);
-    font-size: 9vw; /* Adjusted responsive font size */
-    max-font-size: 60px;
+    font-size: 60px; /* Default font size for desktop */
 }
 
 .selected { background-color: #6a9a6a !important; }
