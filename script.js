@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Modal Screens & Buttons ---
     const welcomeMessage = document.getElementById('welcome-message');
+    const rulesSelection = document.getElementById('rules-selection');
     const modeSelection = document.getElementById('mode-selection');
     const difficultySelection = document.getElementById('difficulty-selection');
     const colorSelection = document.getElementById('color-selection');
@@ -18,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const roomCreatedScreen = document.getElementById('room-created-screen');
     const joinRoomScreen = document.getElementById('join-room-screen');
     const startSetupBtn = document.getElementById('start-setup-btn');
+    const kingCaptureModeBtn = document.getElementById('king-capture-mode-btn');
+    const traditionalModeBtn = document.getElementById('traditional-mode-btn');
     const vsAiBtn = document.getElementById('vs-ai');
     const vsFriendBtn = document.getElementById('vs-friend');
     const vsOnlineBtn = document.getElementById('vs-online');
@@ -37,12 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
         'w_pawn': '♙', 'w_rook': '♖', 'w_knight': '♘', 'w_bishop': '♗', 'w_queen': '♕', 'w_king': '♔',
         'b_pawn': '♟', 'b_rook': '♜', 'b_knight': '♞', 'b_bishop': '♝', 'b_queen': '♛', 'b_king': '♚'
     };
-    const PIECE_VALUES = { 'pawn': 1, 'knight': 3, 'bishop': 3, 'rook': 5, 'queen': 9, 'king': 100 };
+    const PIECE_VALUES = { 'pawn': 1, 'knight': 3, 'bishop': 3, 'rook': 5, 'queen': 9, 'king': 1000 };
 
     let board = [];
     let turn = 'white';
     let moveCount = 0;
-    let gameSettings = { mode: null, difficulty: null, playerColor: null, room: null };
+    let gameSettings = { rules: 'kingCapture', mode: null, difficulty: null, playerColor: null, room: null };
     let isPlayerTurn = true;
     let pendingMove = null;
     let socket;
@@ -61,6 +64,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         startSetupBtn.addEventListener('click', () => {
             welcomeMessage.classList.add('hidden');
+            rulesSelection.classList.remove('hidden');
+        });
+
+        kingCaptureModeBtn.addEventListener('click', () => {
+            gameSettings.rules = 'kingCapture';
+            rulesSelection.classList.add('hidden');
+            modeSelection.classList.remove('hidden');
+        });
+
+        traditionalModeBtn.addEventListener('click', () => {
+            gameSettings.rules = 'traditional';
+            rulesSelection.classList.add('hidden');
             modeSelection.classList.remove('hidden');
         });
 
@@ -144,13 +159,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function endGame(winnerColor, opponentDisconnected = false) {
-        if (opponentDisconnected) {
-            winnerText.innerText = 'Rakibin bağlantısı kesildi. Kazandınız!';
-        } else {
+    function endGame(winnerColor, reason) {
+        let message = '';
+        if (reason === 'checkmate') {
             const winner = winnerColor === 'white' ? 'Beyaz' : 'Siyah';
-            winnerText.innerText = `${winner} Kazandı!`;
+            message = `Şah Mat! ${winner} kazandı.`;
+        } else if (reason === 'stalemate') {
+            message = 'Pat! Oyun berabere.';
+        } else if (reason === 'opponentDisconnected') {
+            message = 'Rakibin bağlantısı kesildi. Kazandınız!';
+        } else { // King capture
+            const winner = winnerColor === 'white' ? 'Beyaz' : 'Siyah';
+            message = `${winner} kazandı!`;
         }
+        winnerText.innerText = message;
         
         const modalContents = document.querySelectorAll('.modal-content > div');
         modalContents.forEach(el => el.classList.add('hidden'));
@@ -186,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         socket.on('opponentDisconnected', () => {
-            endGame(gameSettings.playerColor, true);
+            endGame(gameSettings.playerColor, 'opponentDisconnected');
         });
     }
 
@@ -204,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!pieceId || !pieceId.startsWith(turn.charAt(0))) return;
         if (gameSettings.mode === 'online' && !pieceId.startsWith(gameSettings.playerColor.charAt(0))) return;
 
-        selectedPiece = { pieceId, row, col, validMoves: getValidMoves(pieceId, row, col) };
+        selectedPiece = { pieceId, row, col, validMoves: getValidMoves(pieceId, row, col, board) };
         
         draggedElement = pieceElement.cloneNode(true);
         draggedElement.classList.add('dragging-piece');
@@ -260,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const movingPieceId = board[fromRow][fromCol];
         const targetPieceId = board[toRow][toCol];
 
-        if (movingPieceId.endsWith('king') && targetPieceId) {
+        if (gameSettings.rules === 'kingCapture' && movingPieceId.endsWith('king') && targetPieceId) {
             pendingMove = { fromRow, fromCol, toRow, toCol };
             gameSetupModal.classList.remove('hidden');
             kingCaptureConfirm.classList.remove('hidden');
@@ -282,11 +304,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         logMove(fromRow, fromCol, toRow, toCol, movingPieceId, targetPieceId);
 
-        if (targetPieceId) {
+        if (gameSettings.rules === 'kingCapture' && targetPieceId) {
             const capturedType = targetPieceId.substring(2);
             const movingColor = movingPieceId.substring(0, 2);
             newPieceId = movingColor + capturedType;
             statusMessage.innerText = `${PIECES[movingPieceId]} ${PIECES[targetPieceId]}'ı yedi ve ${PIECES[newPieceId]}'e dönüştü!`
+        } else if (targetPieceId) {
+            statusMessage.innerText = 'Taş alındı!';
         } else {
             statusMessage.innerText = '';
         }
@@ -299,13 +323,22 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMessage.innerText = `Piyon terfi etti!`
         }
 
-        if (targetPieceId?.endsWith('king')) {
-            endGame(turn);
+        if (gameSettings.rules === 'kingCapture' && targetPieceId?.endsWith('king')) {
+            endGame(turn, 'kingCapture');
             return;
         }
 
         turn = turn === 'white' ? 'black' : 'white';
         renderBoard();
+
+        // Check for checkmate/stalemate in traditional mode
+        if (gameSettings.rules === 'traditional') {
+            const gameStatus = getGameStatus(turn, board);
+            if (gameStatus !== 'ongoing') {
+                endGame(turn === 'white' ? 'black' : 'white', gameStatus);
+                return;
+            }
+        }
 
         if (isLocalMove && gameSettings.mode === 'ai' && turn.charAt(0) !== gameSettings.playerColor.charAt(0)) {
             isPlayerTurn = false;
@@ -325,12 +358,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderBoard() {
         chessboard.innerHTML = '';
+        const kingInCheck = (gameSettings.rules === 'traditional') ? findKing(turn, board) : null;
+        const isCheck = kingInCheck ? isSquareAttacked(kingInCheck.r, kingInCheck.c, turn === 'white' ? 'b' : 'w', board) : false;
+
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const square = document.createElement('div');
                 square.classList.add('square', (r + c) % 2 === 0 ? 'light' : 'dark');
                 square.dataset.row = r;
                 square.dataset.col = c;
+
+                if (isCheck && kingInCheck.r === r && kingInCheck.c === c) {
+                    square.classList.add('check');
+                }
 
                 const pieceId = board[r][c];
                 if (pieceId) {
@@ -346,23 +386,25 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTurnInfo();
     }
 
-    function getValidMoves(pieceId, r, c) {
+    // --- TRADITIONAL CHESS LOGIC ---
+
+    function getPseudoLegalMoves(pieceId, r, c, currentBoard) {
         const [color, type] = pieceId.split('_');
         const moves = [];
         const opponentColor = color === 'w' ? 'b' : 'w';
 
         const addMove = (endR, endC) => {
             if (endR >= 0 && endR < 8 && endC >= 0 && endC < 8) {
-                const target = board[endR][endC];
+                const target = currentBoard[endR][endC];
                 if (target === null) {
                     moves.push({ r: endR, c: endC });
-                    return true;
+                    return true; // Can continue sliding
                 } else if (target.startsWith(opponentColor)) {
                     moves.push({ r: endR, c: endC });
-                    return false;
+                    return false; // Blocked by opponent
                 }
             }
-            return false;
+            return false; // Off board or blocked by own piece
         };
 
         const addSlidingMoves = (directions) => {
@@ -380,16 +422,19 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'pawn':
                 const dir = color === 'w' ? -1 : 1;
                 const startRow = color === 'w' ? 6 : 1;
-                if (r + dir >= 0 && r + dir < 8 && board[r + dir][c] === null) {
+                // Forward 1
+                if (r + dir >= 0 && r + dir < 8 && currentBoard[r + dir][c] === null) {
                     moves.push({ r: r + dir, c: c });
-                    if (r === startRow && board[r + 2 * dir][c] === null) {
+                    // Forward 2 from start
+                    if (r === startRow && currentBoard[r + 2 * dir][c] === null) {
                         moves.push({ r: r + 2 * dir, c: c });
                     }
                 }
+                // Capture
                 [-1, 1].forEach(side => {
                     const newC = c + side;
                     if (newC >= 0 && newC < 8) {
-                        const target = board[r + dir]?.[newC];
+                        const target = currentBoard[r + dir]?.[newC];
                         if (target && target.startsWith(opponentColor)) {
                             moves.push({ r: r + dir, c: newC });
                         }
@@ -411,12 +456,89 @@ document.addEventListener('DOMContentLoaded', () => {
         return moves;
     }
 
+    function isSquareAttacked(r, c, attackerColor, currentBoard) {
+        for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+                const pieceId = currentBoard[row][col];
+                if (pieceId && pieceId.startsWith(attackerColor)) {
+                    const moves = getPseudoLegalMoves(pieceId, row, col, currentBoard);
+                    if (moves.some(move => move.r === r && move.c === c)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    function findKing(kingColor, currentBoard) {
+        const kingPieceId = kingColor.charAt(0) + '_king';
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                if (currentBoard[r][c] === kingPieceId) {
+                    return { r, c };
+                }
+            }
+        }
+        return null; // Should not happen
+    }
+
+    function getValidMoves(pieceId, r, c, currentBoard) {
+        const pseudoMoves = getPseudoLegalMoves(pieceId, r, c, currentBoard);
+        if (gameSettings.rules === 'kingCapture') {
+            return pseudoMoves;
+        }
+
+        // Filter for traditional rules (don't leave king in check)
+        const kingColor = pieceId.charAt(0) === 'w' ? 'white' : 'black';
+        const validMoves = [];
+        for (const move of pseudoMoves) {
+            const tempBoard = currentBoard.map(row => [...row]);
+            tempBoard[move.r][move.c] = pieceId;
+            tempBoard[r][c] = null;
+            const kingPos = findKing(kingColor, tempBoard);
+            if (!isSquareAttacked(kingPos.r, kingPos.c, kingColor === 'white' ? 'b' : 'w', tempBoard)) {
+                validMoves.push(move);
+            }
+        }
+        return validMoves;
+    }
+
+    function getGameStatus(playerColor, currentBoard) {
+        const kingPos = findKing(playerColor, currentBoard);
+        if (!kingPos) return 'ongoing'; // Should not happen
+
+        const opponentColor = playerColor === 'white' ? 'b' : 'w';
+        const inCheck = isSquareAttacked(kingPos.r, kingPos.c, opponentColor, currentBoard);
+
+        let hasLegalMoves = false;
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const pieceId = currentBoard[r][c];
+                if (pieceId && pieceId.startsWith(playerColor.charAt(0))) {
+                    const moves = getValidMoves(pieceId, r, c, currentBoard);
+                    if (moves.length > 0) {
+                        hasLegalMoves = true;
+                        break;
+                    }
+                }
+            }
+            if (hasLegalMoves) break;
+        }
+
+        if (!hasLegalMoves) {
+            return inCheck ? 'checkmate' : 'stalemate';
+        }
+
+        return 'ongoing';
+    }
+
     function isValidMove(row, col) {
         return selectedPiece?.validMoves.some(move => move.r === row && move.c === col);
     }
 
     function clearHighlights() {
-        document.querySelectorAll('.valid-move').forEach(el => el.classList.remove('valid-move'));
+        document.querySelectorAll('.valid-move, .check').forEach(el => el.classList.remove('valid-move', 'check'));
     }
 
     function highlightValidMoves() {
@@ -478,13 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let bestMove;
-        const nonSuicidalMoves = allMoves.filter(move => {
-            const isKingMove = move.pieceId.endsWith('king');
-            const isCapture = board[move.to.r][move.to.c] !== null;
-            return !isKingMove || !isCapture;
-        });
-
-        const movesToConsider = nonSuicidalMoves.length > 0 ? nonSuicidalMoves : allMoves;
+        const movesToConsider = allMoves;
 
         if (gameSettings.difficulty === 'easy') {
             bestMove = movesToConsider[Math.floor(Math.random() * movesToConsider.length)];
@@ -504,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let c = 0; c < 8; c++) {
                 const pieceId = currentBoard[r][c];
                 if (pieceId && pieceId.startsWith(color)) {
-                    const moves = getValidMoves(pieceId, r, c);
+                    const moves = getValidMoves(pieceId, r, c, currentBoard);
                     moves.forEach(move => allMoves.push({ from: { r, c }, to: move, pieceId }));
                 }
             }
