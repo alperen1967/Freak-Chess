@@ -361,8 +361,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const kingInCheck = (gameSettings.rules === 'traditional') ? findKing(turn, board) : null;
         const isCheck = kingInCheck ? isSquareAttacked(kingInCheck.r, kingInCheck.c, turn === 'white' ? 'b' : 'w', board) : false;
 
-        for (let r = 0; r < 8; r++) {
-            for (let c = 0; c < 8; c++) {
+        const isFlipped = gameSettings.playerColor === 'black';
+
+        for (let r_idx = 0; r_idx < 8; r_idx++) {
+            for (let c_idx = 0; c_idx < 8; c_idx++) {
+                const r = isFlipped ? 7 - r_idx : r_idx;
+                const c = isFlipped ? 7 - c_idx : c_idx;
+
                 const square = document.createElement('div');
                 square.classList.add('square', (r + c) % 2 === 0 ? 'light' : 'dark');
                 square.dataset.row = r;
