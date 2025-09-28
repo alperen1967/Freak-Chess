@@ -1,3 +1,4 @@
+
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -8,14 +9,24 @@ const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
 
+// The initial state of the board. The server must know this.
+const INITIAL_BOARD = [
+    ['b_rook', 'b_knight', 'b_bishop', 'b_queen', 'b_king', 'b_bishop', 'b_knight', 'b_rook'],
+    ['b_pawn', 'b_pawn', 'b_pawn', 'b_pawn', 'b_pawn', 'b_pawn', 'b_pawn', 'b_pawn'],
+    ...Array.from({ length: 4 }, () => Array(8).fill(null)),
+    ['w_pawn', 'w_pawn', 'w_pawn', 'w_pawn', 'w_pawn', 'w_pawn', 'w_pawn', 'w_pawn'],
+    ['w_rook', 'w_knight', 'w_bishop', 'w_queen', 'w_king', 'w_bishop', 'w_knight', 'w_rook']
+];
+
 app.use(express.static(__dirname));
 
 const rooms = {};
+const MAX_ROOM_SIZE = 5;
 
 io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
 
-    socket.on('createRoom', () => {
+    socket.on('createRoom', (data) => {
         let roomCode = ('00000' + Math.floor(Math.random() * 100000)).slice(-5);
         while (rooms[roomCode]) {
             roomCode = ('00000' + Math.floor(Math.random() * 100000)).slice(-5);
@@ -24,55 +35,86 @@ io.on('connection', (socket) => {
         socket.join(roomCode);
         rooms[roomCode] = {
             players: [socket.id],
-            board: null // Can be used to store board state
+            spectators: [],
+            board: null, 
+            turn: 'white',
+            rules: data.rules // Store the rules
         };
 
         socket.emit('roomCreated', roomCode);
-        console.log(`Room ${roomCode} created by ${socket.id}`);
+        console.log(`Room ${roomCode} created by ${socket.id} with rules: ${data.rules}`);
     });
 
     socket.on('joinRoom', (roomCode) => {
-        if (!rooms[roomCode]) {
-            socket.emit('joinError', 'Oda bulunamadı.');
-            return;
+        const room = rooms[roomCode];
+        if (!room) {
+            return socket.emit('joinError', 'Oda bulunamadı.');
         }
-        if (rooms[roomCode].players.length >= 2) {
-            socket.emit('joinError', 'Oda dolu.');
-            return;
+
+        const totalPeople = room.players.length + room.spectators.length;
+        if (totalPeople >= MAX_ROOM_SIZE) {
+            return socket.emit('joinError', 'Oda dolu (Maksimum 5 kişi).');
         }
 
         socket.join(roomCode);
-        rooms[roomCode].players.push(socket.id);
 
-        const [player1, player2] = rooms[roomCode].players;
+        if (room.players.length < 2) {
+            room.players.push(socket.id);
+            console.log(`${socket.id} joined room ${roomCode} as a player.`);
 
-        io.to(player1).emit('gameStart', { color: 'white', room: roomCode });
-        io.to(player2).emit('gameStart', { color: 'black', room: roomCode });
+            if (room.players.length === 2) {
+                // Game is starting! Set the initial board state on the server.
+                room.board = JSON.parse(JSON.stringify(INITIAL_BOARD)); // Deep copy
+                room.turn = 'white';
 
-        console.log(`${socket.id} joined room ${roomCode}. Game starting.`);
+                const [player1, player2] = room.players;
+                io.to(player1).emit('gameStart', { color: 'white', room: roomCode, isSpectator: false, rules: room.rules });
+                io.to(player2).emit('gameStart', { color: 'black', room: roomCode, isSpectator: false, rules: room.rules });
+                console.log(`Game starting in room ${roomCode}.`);
+            }
+        } else { // Add as a spectator
+            room.spectators.push(socket.id);
+            console.log(`${socket.id} joined room ${roomCode} as a spectator.`);
+            socket.emit('gameStart', { 
+                room: roomCode, 
+                isSpectator: true, 
+                board: room.board, 
+                turn: room.turn,
+                rules: room.rules
+            });
+            io.to(roomCode).emit('spectatorUpdate', room.spectators.length);
+        }
     });
 
     socket.on('move', (data) => {
-        console.log(`Move received in room ${data.room}:`, data.move);
-        socket.to(data.room).emit('opponentMove', data.move);
+        const room = rooms[data.room];
+        if (room && room.players.includes(socket.id)) {
+            room.board = data.board;
+            room.turn = data.turn;
+            socket.to(data.room).emit('opponentMove', data.move);
+            console.log(`Move received in room ${data.room}`);
+        }
     });
 
     socket.on('disconnect', () => {
         console.log(`User disconnected: ${socket.id}`);
-        // Find which room the player was in and notify the other player
         for (const roomCode in rooms) {
             const room = rooms[roomCode];
+            
             const playerIndex = room.players.indexOf(socket.id);
             if (playerIndex !== -1) {
-                // If the game had 2 players, notify the other one
-                if (room.players.length === 2) {
-                    const otherPlayerId = room.players[1 - playerIndex];
-                    io.to(otherPlayerId).emit('opponentDisconnected');
-                }
-                // Clean up the room
+                console.log(`Player ${socket.id} disconnected from room ${roomCode}. Game over.`);
+                io.to(roomCode).emit('opponentDisconnected');
                 delete rooms[roomCode];
-                console.log(`Room ${roomCode} closed due to player disconnect.`);
-                break;
+                return;
+            }
+
+            const spectatorIndex = room.spectators.indexOf(socket.id);
+            if (spectatorIndex !== -1) {
+                room.spectators.splice(spectatorIndex, 1);
+                console.log(`Spectator ${socket.id} left room ${roomCode}.`);
+                io.to(roomCode).emit('spectatorUpdate', room.spectators.length);
+                return;
             }
         }
     });

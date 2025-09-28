@@ -3,57 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dönüşüm Satrancı</title>
+    <title>Freak Chess!</title>
+    <link rel="icon" type="image/png" href="logoo.png">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-setup-modal" class="modal-overlay">
+    <!-- New Login Screen -->
+    <div id="login-screen" class="modal-overlay">
+        <div class="login-container">
+            <img src="logoo.png" alt="Freak Chess Logo" class="logo">
+            <input type="text" id="username-input" placeholder="Kullanıcı Adı">
+            <button id="login-proceed-btn">İlerle</button>
+        </div>
+    </div>
+
+    <!-- New Game Setup Screen (Initially Hidden) -->
+    <div id="new-game-setup-screen" class="modal-overlay hidden">
+        <div class="new-setup-container">
+            
+            <div class="setup-section">
+                <h3>Oyun Kuralı</h3>
+                <div id="rules-group" class="button-group">
+                    <button data-rule="kingCapture">Şahı Yiyen Kazanır</button>
+                    <button data-rule="traditional">Geleneksel Satranç</button>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <h3>Kime Karşı?</h3>
+                <div id="mode-group" class="button-group">
+                    <button data-mode="ai">Yapay Zeka</button>
+                    <button data-mode="friend">Arkadaşınla</button>
+                    <button data-mode="online">Online</button>
+                </div>
+            </div>
+
+            <div id="difficulty-section" class="setup-section disabled">
+                <h3>Zorluk</h3>
+                <div id="difficulty-group" class="button-group">
+                    <button data-difficulty="easy">Kolay</button>
+                    <button data-difficulty="medium">Orta</button>
+                    <button data-difficulty="hard">Zor</button>
+                </div>
+            </div>
+            
+            <div class="setup-actions">
+                <button id="start-game-btn" class="hidden">Oyuna Başla!</button>
+                <button id="create-room-btn-new" class="hidden">Oda Kur</button>
+                <button id="join-room-btn-new">Odaya Katıl</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Join Room Screen (Initially Hidden) -->
+    <div id="join-room-screen" class="modal-overlay hidden">
+        <div class="login-container">
+            <h2>Odaya Katıl</h2>
+            <p>Arkadaşının verdiği kodu gir:</p>
+            <input type="text" id="room-code-input" placeholder="Oda Kodu">
+            <button id="submit-join-btn">Katıl</button>
+            <p id="join-error-msg" style="color: red;"></p>
+        </div>
+    </div>
+
+    <!-- This modal is now only for in-game popups like color choice, king capture confirm, etc. -->
+    <div id="game-setup-modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <div id="welcome-message">
-                <h2>Merhabalar!</h2>
-                <p>Bu satranç modunun tek kuralı var: <br><strong>Hangi taşı yersen ona dönüşürsün.</strong></p>
-                <button id="start-setup-btn">Anladım, Başla!</button>
-            </div>
-            <div id="rules-selection" class="hidden">
-                <h2>Oyun Modu</h2>
-                <button id="king-capture-mode-btn">Şahı Yiyen Kazanır</button>
-                <button id="traditional-mode-btn">Geleneksel Satranç</button>
-            </div>
-            <div id="mode-selection" class="hidden">
-                <h2>Nasıl Oynamak İstersin?</h2>
-                <button id="vs-ai">Yapay Zekaya Karşı</button>
-                <button id="vs-friend">Arkadaşınla Oyna</button>
-                <button id="vs-online">Online Oyna</button>
-            </div>
-            <div id="online-menu" class="hidden">
-                <h2>Online Oyun</h2>
-                <button id="create-room-btn">Oda Kur</button>
-                <button id="join-room-btn">Odaya Katıl</button>
-            </div>
             <div id="room-created-screen" class="hidden">
                 <h2>Oda Kuruldu!</h2>
                 <p>Bu kodu arkadaşınla paylaş:</p>
                 <strong id="room-code-display"></strong>
                 <p>Rakip bekleniyor...</p>
             </div>
-            <div id="join-room-screen" class="hidden">
-                <h2>Odaya Katıl</h2>
-                <p>Arkadaşının verdiği kodu gir:</p>
-                <input type="text" id="room-code-input" placeholder="Oda Kodu">
-                <button id="submit-join-btn">Katıl</button>
-                <p id="join-error-msg" style="color: red;"></p>
-            </div>
-            <div id="difficulty-selection" class="hidden">
-                <h2>Zorluk Seviyesi Seç</h2>
-                <button data-difficulty="easy">Kolay</button>
-                <button data-difficulty="medium">Orta</button>
-                <button data-difficulty="hard">Zor</button>
-            </div>
-            <div id="color-selection" class="hidden">
-                <h2>Hangi Renk Olmak İstersin?</h2>
+        </div>
+    </div>
+
+    <!-- New Color Selection Screen (Initially Hidden) -->
+    <div id="color-selection" class="modal-overlay hidden">
+        <div class="login-container">
+            <h2>Hangi Renk Olmak İstersin?</h2>
+            <div class="button-group">
                 <button data-color="white">Beyaz</button>
                 <button data-color="black">Siyah</button>
             </div>
+        </div>
+    </div>
             <div id="king-capture-confirm" class="hidden">
                 <h2>Şahını kaybedeceksin. Emin misin? :)</h2>
                 <button id="confirm-king-capture-yes">Evet</button>
@@ -66,7 +100,7 @@
         </div>
     </div>
 
-    <h1>Freak Chess</h1>
+    <h1 style="display: block;">Freak Chess</h1>
     <div id="game-container" class="hidden">
         <div id="board-area">
             <div id="rank-labels">
@@ -86,9 +120,12 @@
                 <h3>Hamle Geçmişi</h3>
                 <div id="move-list"></div>
             </div>
+            <div id="spectator-info" class="hidden">
+                İzleyiciler: <span id="spectator-count">0</span>
+            </div>
         </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="main.js"></script>
 </body>
 </html>
