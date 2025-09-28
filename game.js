@@ -1,5 +1,5 @@
 
-import { renderBoard, logMove, statusMessage, winnerText, gameSetupModal, gameOverMessage, PIECES, gameContainer } from './ui.js';
+import { renderBoard, logMove, statusMessage, winnerText, gameSetupModal, gameOverModal, PIECES, gameContainer } from './ui.js';
 import { makeAiMove } from './ai.js';
 import { board, turn, gameSettings, socket, setBoard, setTurn, setPendingMove, setIsPlayerTurn } from './state.js';
 
@@ -30,22 +30,21 @@ export function startGame() {
 }
 
 export function endGame(winnerColor, reason) {
+    let winnerName = winnerColor === 'white' ? 'Beyaz' : 'Siyah';
+
     let message = '';
     if (reason === 'checkmate') {
-        const winner = winnerColor === 'white' ? 'Beyaz' : 'Siyah';
-        message = `Şah Mat! ${winner} kazandı.`;
+        message = `Şah Mat! ${winnerName} kazandı!`;
     } else if (reason === 'stalemate') {
         message = 'Pat! Oyun berabere.';
     } else if (reason === 'opponentDisconnected') {
         message = 'Rakibin bağlantısı kesildi. Kazandınız!';
     } else { // King capture
-        const winner = winnerColor === 'white' ? 'Beyaz' : 'Siyah';
-        message = `${winner} kazandı!`;
+        message = `${winnerName} kazandı!`;
     }
     winnerText.innerText = message;
     
-    gameOverMessage.parentElement.parentElement.classList.remove('hidden');
-    gameOverMessage.classList.remove('hidden');
+    gameOverModal.classList.remove('hidden');
     if (aiMoveTimeoutId) clearTimeout(aiMoveTimeoutId);
     setIsPlayerTurn(false);
 }
@@ -71,9 +70,21 @@ export function handleLocalMove(fromRow, fromCol, toRow, toCol) {
 export function executeMove(fromRow, fromCol, toRow, toCol, isLocalMove) {
     const movingPieceId = board[fromRow][fromCol];
     const targetPieceId = board[toRow][toCol];
-    let newPieceId = movingPieceId;
 
+    const isKingCaptureRule = (gameSettings.rules === 'kingCapture');
+    const isTargetKing = (targetPieceId !== null && typeof targetPieceId === 'string' && targetPieceId.endsWith('king'));
+
+    if (isKingCaptureRule && isTargetKing) {
+        // The board state won't be visually updated, but the game will end.
+        // This is to ensure no other function call interferes with endGame.
+        endGame(turn, 'kingCapture');
+        return;
+    }
+
+    // --- Normal Move Logic ---
     logMove(fromRow, fromCol, toRow, toCol, movingPieceId, targetPieceId, turn);
+    
+    let newPieceId = movingPieceId;
 
     if (targetPieceId && !movingPieceId.endsWith('_king')) {
         const capturedType = targetPieceId.substring(2);
@@ -95,11 +106,6 @@ export function executeMove(fromRow, fromCol, toRow, toCol, isLocalMove) {
         statusMessage.innerText = `Piyon terfi etti!`
     }
     setBoard(newBoard);
-
-    if (gameSettings.rules === 'kingCapture' && targetPieceId?.endsWith('king')) {
-        endGame(turn, 'kingCapture');
-        return;
-    }
 
     const newTurn = turn === 'white' ? 'black' : 'white';
     setTurn(newTurn);

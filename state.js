@@ -5,11 +5,6 @@ export let gameSettings = { rules: 'kingCapture', mode: null, difficulty: null, 
 export let isPlayerTurn = true;
 export let pendingMove = null;
 export let socket;
-export let username = '';
-
-export function setUsername(name) {
-    username = name;
-}
 
 export function setBoard(newBoard) {
     board = newBoard;

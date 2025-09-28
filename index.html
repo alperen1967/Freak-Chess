@@ -9,7 +9,7 @@
 </head>
 <body>
     <!-- New Login Screen -->
-    <div id="login-screen" class="modal-overlay">
+    <div id="login-screen" class="modal-overlay hidden">
         <div class="login-container">
             <img src="logoo.png" alt="Freak Chess Logo" class="logo">
             <input type="text" id="username-input" placeholder="Kullanıcı Adı">
@@ -19,6 +19,7 @@
 
     <!-- New Game Setup Screen (Initially Hidden) -->
     <div id="new-game-setup-screen" class="modal-overlay hidden">
+        <img src="logoo.png" alt="Freak Chess Logo" class="setup-logo">
         <div class="new-setup-container">
             
             <div class="setup-section">
@@ -93,10 +94,21 @@
                 <button id="confirm-king-capture-yes">Evet</button>
                 <button id="confirm-king-capture-no">Hayır</button>
             </div>
-            <div id="game-over-message" class="hidden">
-                <h2 id="winner-text"></h2>
-                <button id="new-game-btn">Yeni Oyun</button>
-            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="modal-overlay hidden">
+        <div class="new-setup-container">
+            <h2 id="winner-text"></h2>
+            <button id="restart-same-mode-btn">Yeni Oyun</button>
+            <button id="change-mode-btn">Başka Mod Seç</button>
+        </div>
+    </div>
+        <div class="new-setup-container">
+            <h2 id="winner-text"></h2>
+            <button id="restart-same-mode-btn">Yeni Oyun</button>
+            <button id="change-mode-btn">Başka Mod Seç</button>
         </div>
     </div>
 

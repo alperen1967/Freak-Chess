@@ -8,12 +8,12 @@ import { handleMouseDown } from './dragDrop.js';
 document.addEventListener('DOMContentLoaded', init);
 
 function init() {
-    // Show login screen first
-    ui.loginScreen.classList.remove('hidden');
+    // Show game setup screen directly, bypassing login
+    ui.newGameSetupScreen.classList.remove('hidden');
+    connectOnline();
     document.querySelector('h1').style.display = 'none'; // Hide main title initially
 
     // Event Listeners
-    ui.loginProceedBtn.addEventListener('click', handleLoginProceed);
     ui.rulesGroup.addEventListener('click', handleSelection);
     ui.modeGroup.addEventListener('click', handleSelection);
     ui.difficultyGroup.addEventListener('click', handleSelection);
@@ -28,21 +28,32 @@ function init() {
             state.socket.emit('joinRoom', roomCode);
         }
     });
-    ui.newGameBtn.addEventListener('click', () => location.reload());
+    ui.restartSameModeBtn.addEventListener('click', handleRestartSameMode);
+    ui.changeModeBtn.addEventListener('click', handleChangeMode);
+    
     ui.chessboard.addEventListener('mousedown', handleMouseDown);
 }
 
-function handleLoginProceed() {
-    const username = ui.usernameInput.value.trim();
-    if (username) {
-        state.setUsername(username);
-        ui.loginScreen.classList.add('hidden');
-        ui.newGameSetupScreen.classList.remove('hidden');
-        connectOnline();
-    } else {
-        alert('Lütfen bir kullanıcı adı girin.');
-    }
+function handleRestartSameMode() {
+    ui.gameOverModal.classList.add('hidden');
+    showGameScreen();
+    startGame();
 }
+
+function handleChangeMode() {
+    ui.gameOverModal.classList.add('hidden');
+    
+    // Reset selections
+    state.setGameSettings({ rules: null, mode: null, difficulty: null, playerColor: null });
+    ui.rulesGroup.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    ui.modeGroup.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    ui.difficultyGroup.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    updateUIBasedOnSelections();
+
+    ui.newGameSetupScreen.classList.remove('hidden');
+}
+
+
 
 function handleSelection(e) {
     const button = e.target.closest('button');
