@@ -33,16 +33,12 @@ export const submitJoinBtn = document.getElementById('submit-join-btn');
 export const joinErrorMsg = document.getElementById('join-error-msg');
 export const confirmKingCaptureYesBtn = document.getElementById('confirm-king-capture-yes');
 export const confirmKingCaptureNoBtn = document.getElementById('confirm-king-capture-no');
-export const restartSameModeBtn = document.getElementById('restart-same-mode-btn');
-export const changeModeBtn = document.getElementById('change-mode-btn');
+export const closeGameOverBtn = document.getElementById('close-game-over-btn');
 export const winnerText = document.getElementById('winner-text');
 export const spectatorInfo = document.getElementById('spectator-info');
 export const spectatorCount = document.getElementById('spectator-count');
 
 // New UI Elements
-export const loginScreen = document.getElementById('login-screen');
-export const usernameInput = document.getElementById('username-input');
-export const loginProceedBtn = document.getElementById('login-proceed-btn');
 export const newGameSetupScreen = document.getElementById('new-game-setup-screen');
 export const rulesGroup = document.getElementById('rules-group');
 export const modeGroup = document.getElementById('mode-group');
@@ -51,8 +47,19 @@ export const difficultyGroup = document.getElementById('difficulty-group');
 export const startGameBtn = document.getElementById('start-game-btn');
 export const createRoomBtnNew = document.getElementById('create-room-btn-new');
 export const joinRoomBtnNew = document.getElementById('join-room-btn-new');
+export const restartGameBtn = document.getElementById('restart-game-btn');
+export const returnToMenuBtn = document.getElementById('return-to-menu-btn');
+export const restartConfirmModal = document.getElementById('restart-confirm-modal');
+export const confirmRestartBtn = document.getElementById('confirm-restart-btn');
+export const cancelRestartBtn = document.getElementById('cancel-restart-btn');
 
 let moveCount = 0;
+
+export function resetMoveHistory() {
+    moveList.innerHTML = '';
+    moveCount = 0;
+    statusMessage.innerText = '';
+}
 
 export function renderBoard(board, turn, gameSettings, findKing, isSquareAttacked) {
     chessboard.innerHTML = '';

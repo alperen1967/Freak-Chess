@@ -8,17 +8,8 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- New Login Screen -->
-    <div id="login-screen" class="modal-overlay hidden">
-        <div class="login-container">
-            <img src="logoo.png" alt="Freak Chess Logo" class="logo">
-            <input type="text" id="username-input" placeholder="Kullanıcı Adı">
-            <button id="login-proceed-btn">İlerle</button>
-        </div>
-    </div>
-
     <!-- New Game Setup Screen (Initially Hidden) -->
-    <div id="new-game-setup-screen" class="modal-overlay hidden">
+    <div id="new-game-setup-screen" class="modal-overlay">
         <img src="logoo.png" alt="Freak Chess Logo" class="setup-logo">
         <div class="new-setup-container">
             
@@ -101,14 +92,18 @@
     <div id="game-over-modal" class="modal-overlay hidden">
         <div class="new-setup-container">
             <h2 id="winner-text"></h2>
-            <button id="restart-same-mode-btn">Yeni Oyun</button>
-            <button id="change-mode-btn">Başka Mod Seç</button>
+            <button id="close-game-over-btn">Kapat</button>
         </div>
     </div>
+
+    <!-- Restart Confirmation Modal -->
+    <div id="restart-confirm-modal" class="modal-overlay hidden">
         <div class="new-setup-container">
-            <h2 id="winner-text"></h2>
-            <button id="restart-same-mode-btn">Yeni Oyun</button>
-            <button id="change-mode-btn">Başka Mod Seç</button>
+            <h2>Satranç tahtasını sıfırlamak istediğinizden emin misiniz?</h2>
+            <div class="button-group">
+                <button id="confirm-restart-btn">Evet</button>
+                <button id="cancel-restart-btn">Hayır</button>
+            </div>
         </div>
     </div>
 
@@ -124,6 +119,10 @@
             </div>
         </div>
         <div id="side-panel">
+            <div id="game-controls">
+                <button id="restart-game-btn">Yeni Oyun</button>
+                <button id="return-to-menu-btn">Başka Mod Seç</button>
+            </div>
             <div id="info-panel">
                 <h2 id="turn-info">Beyazın Sırası</h2>
                 <p id="status-message"></p>
