@@ -12,6 +12,9 @@ function init() {
     connectOnline();
     document.querySelector('h1').style.display = 'none';
 
+    // Global listener for showing the game screen (triggered by online.js)
+    document.addEventListener('showGameScreen', showGameScreenAndHideMenus);
+
     // Setup Screen Listeners
     ui.rulesGroup.addEventListener('click', handleSelection);
     ui.modeGroup.addEventListener('click', handleSelection);
@@ -49,8 +52,7 @@ function handleStartGame() {
         ui.newGameSetupScreen.classList.add('hidden');
         ui.colorSelection.classList.remove('hidden');
     } else { // For local friend mode
-        ui.newGameSetupScreen.classList.add('hidden');
-        showGameScreen();
+        showGameScreenAndHideMenus();
         startGame();
     }
 }
@@ -58,6 +60,13 @@ function handleStartGame() {
 function showGameScreen() {
     document.querySelector('h1').style.display = 'block';
     ui.gameContainer.classList.remove('hidden');
+}
+
+function showGameScreenAndHideMenus() {
+    ui.newGameSetupScreen.classList.add('hidden');
+    ui.joinRoomScreen.classList.add('hidden');
+    ui.gameSetupModal.classList.add('hidden');
+    showGameScreen();
 }
 
 function returnToMenu() {
@@ -95,7 +104,7 @@ function handleColorSelection(e) {
     if (!button) return;
     state.setGameSettings({ playerColor: button.dataset.color });
     ui.colorSelection.classList.add('hidden');
-    showGameScreen();
+    showGameScreenAndHideMenus();
     startGame();
 }
 

@@ -20,8 +20,13 @@ export function connectOnline() {
         setGameSettings({ 
             room: data.room,
             playerColor: data.color,
-            isSpectator: data.isSpectator 
+            isSpectator: data.isSpectator,
+            rules: data.rules // Make sure rules are set from server
         });
+
+        // Announce to the UI that it's time to show the game board
+        document.dispatchEvent(new CustomEvent('showGameScreen'));
+
         if (data.isSpectator) {
             setBoard(data.board);
             setTurn(data.turn);
