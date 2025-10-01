@@ -1,5 +1,5 @@
 import { gameSettings, board, turn, setIsPlayerTurn } from './state.js';
-import { executeMove, getValidMoves, PIECE_VALUES } from './game.js';
+import { executeMove, getValidMoves, PIECE_VALUES, isSquareAttacked } from './game.js';
 
 export function makeAiMove() {
     const aiColor = gameSettings.playerColor === 'white' ? 'b' : 'w';
@@ -11,12 +11,10 @@ export function makeAiMove() {
     }
 
     let bestMove;
-    const movesToConsider = allMoves;
-
     if (gameSettings.difficulty === 'easy') {
-        bestMove = movesToConsider[Math.floor(Math.random() * movesToConsider.length)];
+        bestMove = allMoves[Math.floor(Math.random() * allMoves.length)];
     } else {
-        bestMove = getBestAiMove(movesToConsider, gameSettings.difficulty);
+        bestMove = getBestAiMove(allMoves, aiColor, gameSettings.difficulty);
     }
 
     if (bestMove) {
@@ -39,32 +37,66 @@ function getAllPossibleMoves(color, currentBoard) {
     return allMoves;
 }
 
-function getBestAiMove(moves, difficulty) {
+function getBestAiMove(moves, aiColor, difficulty) {
+    const opponentColor = aiColor === 'w' ? 'b' : 'w';
+
+    if (difficulty === 'medium') {
+        let bestCaptureValue = -1;
+        let bestCaptureMove = null;
+        for (const move of moves) {
+            const targetPiece = board[move.to.r][move.to.c];
+            if (targetPiece) {
+                const captureValue = PIECE_VALUES[targetPiece.substring(2)] || 0;
+                if (captureValue > bestCaptureValue) {
+                    bestCaptureValue = captureValue;
+                    bestCaptureMove = move;
+                }
+            }
+        }
+        if (bestCaptureMove) {
+            return bestCaptureMove;
+        }
+        // If no captures, make a random move
+        return moves[Math.floor(Math.random() * moves.length)];
+    }
+
+    // --- Hard Difficulty Logic ---
     let bestMove = null;
     let bestValue = -Infinity;
 
     for (const move of moves) {
         const tempBoard = board.map(row => [...row]);
-        const targetPiece = tempBoard[move.to.r][move.to.c];
+        const capturedPiece = tempBoard[move.to.r][move.to.c];
         tempBoard[move.to.r][move.to.c] = move.pieceId;
         tempBoard[move.from.r][move.from.c] = null;
 
         let moveValue = 0;
-        if (targetPiece) {
-            moveValue = PIECE_VALUES[targetPiece.substring(2)] || 0;
+
+        // 1. Value of captured piece
+        if (capturedPiece) {
+            moveValue += PIECE_VALUES[capturedPiece.substring(2)] || 0;
         }
 
+        // 2. Positional bonus for center control (very small bonus)
+        const centerSquares = { '3,3': 1, '3,4': 1, '4,3': 1, '4,4': 1 };
+        if (`${move.to.r},${move.to.c}` in centerSquares) {
+            moveValue += 0.1;
+        }
+
+        // 3. Penalty for moving into an attacked square
+        if (isSquareAttacked(move.to.r, move.to.c, opponentColor, tempBoard)) {
+            moveValue -= (PIECE_VALUES[move.pieceId.substring(2)] / 2) || 0;
+        }
+
+        // 4. Minimax: Look ahead one ply for opponent's best response
         let opponentBestResponse = 0;
-        if (difficulty === 'hard') {
-            const opponentColor = turn === 'white' ? 'b' : 'w';
-            const opponentMoves = getAllPossibleMoves(opponentColor, tempBoard);
-            for (const oppMove of opponentMoves) {
-                const oppTarget = tempBoard[oppMove.to.r][oppMove.to.c];
-                if (oppTarget) {
-                    const value = PIECE_VALUES[oppTarget.substring(2)] || 0;
-                    if (value > opponentBestResponse) {
-                        opponentBestResponse = value;
-                    }
+        const opponentMoves = getAllPossibleMoves(opponentColor, tempBoard);
+        for (const oppMove of opponentMoves) {
+            const oppTarget = tempBoard[oppMove.to.r][oppMove.to.c];
+            if (oppTarget) {
+                const value = PIECE_VALUES[oppTarget.substring(2)] || 0;
+                if (value > opponentBestResponse) {
+                    opponentBestResponse = value;
                 }
             }
         }
@@ -74,13 +106,6 @@ function getBestAiMove(moves, difficulty) {
         if (finalValue > bestValue) {
             bestValue = finalValue;
             bestMove = move;
-        }
-    }
-    
-    if (difficulty === 'medium') {
-        let captureMoves = moves.filter(m => board[m.to.r][m.to.c] !== null);
-        if (captureMoves.length > 0) {
-            return captureMoves[Math.floor(Math.random() * captureMoves.length)];
         }
     }
 

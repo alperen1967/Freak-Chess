@@ -1,7 +1,7 @@
 
 export let board = [];
 export let turn = 'white';
-export let gameSettings = { rules: 'kingCapture', mode: null, difficulty: null, playerColor: null, room: null, isSpectator: false };
+export let gameSettings = { rules: null, mode: null, difficulty: null, playerColor: null, room: null, isSpectator: false };
 export let isPlayerTurn = true;
 export let pendingMove = null;
 export let socket;

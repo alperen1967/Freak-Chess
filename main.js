@@ -119,6 +119,7 @@ function handleSelection(e) {
 function updateUIBasedOnSelections() {
     const settings = state.gameSettings;
 
+    // Handle AI difficulty section visibility
     if (settings.mode === 'ai') {
         ui.difficultySection.classList.remove('disabled');
     } else {
@@ -127,15 +128,17 @@ function updateUIBasedOnSelections() {
         ui.difficultyGroup.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
     }
 
+    // Reset all buttons to hidden by default
     ui.startGameBtn.classList.add('hidden');
     ui.createRoomBtnNew.classList.add('hidden');
     ui.joinRoomBtnNew.classList.add('hidden');
 
+    // Explicitly set visibility based on selections
     if (settings.mode === 'online') {
+        ui.joinRoomBtnNew.classList.remove('hidden'); // Always show Join Room in online mode
         if (settings.rules) {
-            ui.createRoomBtnNew.classList.remove('hidden');
+            ui.createRoomBtnNew.classList.remove('hidden'); // Only show Create Room if a rule is also selected
         }
-        ui.joinRoomBtnNew.classList.remove('hidden');
     } else if (settings.mode === 'ai') {
         if (settings.rules && settings.difficulty) {
             ui.startGameBtn.classList.remove('hidden');
@@ -144,8 +147,6 @@ function updateUIBasedOnSelections() {
         if (settings.rules) {
             ui.startGameBtn.classList.remove('hidden');
         }
-    } else {
-        ui.joinRoomBtnNew.classList.remove('hidden');
     }
 }
 
