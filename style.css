@@ -82,8 +82,8 @@ h1 {
 }
 
 .square {
-    width: 80px;
-    height: 80px;
+    width: 100%;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -314,4 +314,37 @@ h1 {
     max-width: 80%;
     margin-bottom: 20px;
     line-height: 1.3;
+}
+
+/* --- MOBILE RESPONSIVE STYLES --- */
+@media (max-width: 768px) {
+    #game-container {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    #board-area {
+        width: 95vw; /* Make board area take most of the screen width */
+        grid-template-columns: 20px 1fr; /* Keep ranks/files labels */
+    }
+
+    #chessboard {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1; /* Maintain square shape */
+        border-width: 3px;
+    }
+
+    .square {
+        font-size: 8vw; /* Scale piece size with the board */
+    }
+
+    #side-panel {
+        width: 95vw;
+    }
+
+    #move-list {
+        height: 200px; /* Reduce height on mobile */
+    }
 }

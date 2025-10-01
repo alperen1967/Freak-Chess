@@ -2,7 +2,7 @@ import * as ui from './ui.js';
 import * as state from './state.js';
 import { startGame } from './game.js';
 import { connectOnline } from './online.js';
-import { handleMouseDown } from './dragDrop.js';
+import { handleDragStart } from './dragDrop.js';
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -27,7 +27,8 @@ function init() {
     });
 
     // In-Game Listeners
-    ui.chessboard.addEventListener('mousedown', handleMouseDown);
+    ui.chessboard.addEventListener('mousedown', handleDragStart);
+    ui.chessboard.addEventListener('touchstart', handleDragStart, { passive: false });
     ui.colorSelection.addEventListener('click', handleColorSelection);
     
     // In-Game Menu Button Listeners

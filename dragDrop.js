@@ -6,8 +6,15 @@ let selectedPiece = null;
 let draggedElement = null;
 let originalSquare = null;
 
-export function handleMouseDown(e) {
+// Universal event handler for starting a drag
+export function handleDragStart(e) {
+    // Prevent page scrolling on touch devices
+    if (e.type === 'touchstart') {
+        e.preventDefault();
+    }
+
     if (!isPlayerTurn || gameSettings.isSpectator) return;
+    
     const pieceElement = e.target.closest('.piece');
     if (!pieceElement) return;
 
@@ -24,23 +31,37 @@ export function handleMouseDown(e) {
     draggedElement = pieceElement.cloneNode(true);
     draggedElement.classList.add('dragging-piece');
     document.body.appendChild(draggedElement);
-    positionDraggedElement(e);
+    
+    const coords = getEventCoordinates(e);
+    positionDraggedElement(coords);
 
     pieceElement.classList.add('piece-hidden');
     highlightValidMoves(selectedPiece);
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    // Add universal move and end listeners
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('touchmove', handleDragMove);
+    document.addEventListener('mouseup', handleDragEnd);
+    document.addEventListener('touchend', handleDragEnd);
 }
 
-function handleMouseMove(e) {
-    if (draggedElement) positionDraggedElement(e);
+// Universal event handler for moving the piece
+function handleDragMove(e) {
+    if (draggedElement) {
+        const coords = getEventCoordinates(e);
+        positionDraggedElement(coords);
+    }
 }
 
-function handleMouseUp(e) {
+// Universal event handler for ending a drag
+function handleDragEnd(e) {
     if (!draggedElement) return;
 
-    const targetSquare = getSquareFromCoordinates(e.clientX, e.clientY);
+    const coords = getEventCoordinates(e);
+    // For touchend, the coordinates are in changedTouches
+    const endCoords = e.type === 'touchend' ? e.changedTouches[0] : coords;
+
+    const targetSquare = getSquareFromCoordinates(endCoords.clientX, endCoords.clientY);
     
     if (targetSquare) {
         const toRow = parseInt(targetSquare.dataset.row);
@@ -50,6 +71,7 @@ function handleMouseUp(e) {
         }
     }
 
+    // Cleanup
     document.body.removeChild(draggedElement);
     originalSquare.querySelector('.piece')?.classList.remove('piece-hidden');
     clearHighlights();
@@ -57,15 +79,31 @@ function handleMouseUp(e) {
     draggedElement = null;
     selectedPiece = null;
     originalSquare = null;
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+    
+    // Remove universal listeners
+    document.removeEventListener('mousemove', handleDragMove);
+    document.removeEventListener('touchmove', handleDragMove);
+    document.removeEventListener('mouseup', handleDragEnd);
+    document.removeEventListener('touchend', handleDragEnd);
 }
 
-function positionDraggedElement(e) {
-    draggedElement.style.left = `${e.clientX - draggedElement.offsetWidth / 2}px`;
-    draggedElement.style.top = `${e.clientY - draggedElement.offsetHeight / 2}px`;
+// --- Helper Functions ---
+
+// Gets coordinates from either a mouse or touch event
+function getEventCoordinates(e) {
+    return e.touches ? e.touches[0] : e;
+}
+
+function positionDraggedElement(coords) {
+    draggedElement.style.left = `${coords.clientX - draggedElement.offsetWidth / 2}px`;
+    draggedElement.style.top = `${coords.clientY - draggedElement.offsetHeight / 2}px`;
 }
 
 function getSquareFromCoordinates(x, y) {
-    return document.elementsFromPoint(x, y).find(el => el.classList.contains('square'));
+    // Hide the dragged piece so it doesn't block the elementFromPoint check
+    draggedElement.style.display = 'none';
+    const element = document.elementFromPoint(x, y);
+    // Show it again
+    draggedElement.style.display = '';
+    return element?.closest('.square');
 }
