@@ -1,5 +1,4 @@
-
-import { renderBoard, logMove, statusMessage, winnerText, gameSetupModal, gameOverModal, PIECES, gameContainer } from './ui.js';
+import { renderBoard, logMove, statusMessage, winnerText, gameSetupModal, gameOverModal, PIECES, gameContainer, resetMoveHistory } from './ui.js';
 import { makeAiMove } from './ai.js';
 import { board, turn, gameSettings, socket, setBoard, setTurn, setPendingMove, setIsPlayerTurn } from './state.js';
 
@@ -18,11 +17,17 @@ export function initializeBoard() {
 }
 
 export function startGame() {
+    // Reset all game state for a fresh start
+    resetMoveHistory();
+    setTurn('white');
+    setIsPlayerTurn(true);
+
     if (!gameSettings.isSpectator) {
         initializeBoard();
     }
     renderBoard(board, turn, gameSettings, findKing, isSquareAttacked);
 
+    // If AI is playing as white, it should make the first move
     if (gameSettings.mode === 'ai' && gameSettings.playerColor !== 'white') {
         setIsPlayerTurn(false);
         aiMoveTimeoutId = setTimeout(makeAiMove, 500);
@@ -71,12 +76,9 @@ export function executeMove(fromRow, fromCol, toRow, toCol, isLocalMove) {
     const movingPieceId = board[fromRow][fromCol];
     const targetPieceId = board[toRow][toCol];
 
-    const isKingCaptureRule = (gameSettings.rules === 'kingCapture');
-    const isTargetKing = (targetPieceId !== null && typeof targetPieceId === 'string' && targetPieceId.endsWith('king'));
-
-    if (isKingCaptureRule && isTargetKing) {
-        // The board state won't be visually updated, but the game will end.
-        // This is to ensure no other function call interferes with endGame.
+    // Immediately handle game end for king capture rule
+    if (gameSettings.rules === 'kingCapture' && targetPieceId?.endsWith('king')) {
+        logMove(fromRow, fromCol, toRow, toCol, movingPieceId, targetPieceId, turn);
         endGame(turn, 'kingCapture');
         return;
     }
