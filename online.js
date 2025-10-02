@@ -41,7 +41,7 @@ export function connectOnline() {
     });
 
     socket.on('opponentDisconnected', () => {
-        document.dispatchEvent(new CustomEvent('opponentDisconnected'));
+        endGame(gameSettings.playerColor, 'opponentDisconnected');
     });
 
     socket.on('spectatorUpdate', (count) => {
