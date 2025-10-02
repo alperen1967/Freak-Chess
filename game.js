@@ -42,9 +42,7 @@ export function endGame(winnerColor, reason) {
         message = `Şah Mat! ${winnerName} kazandı!`;
     } else if (reason === 'stalemate') {
         message = 'Pat! Oyun berabere.';
-    } else if (reason === 'opponentDisconnected') {
-        message = 'Rakibin bağlantısı kesildi. Kazandınız!';
-    } else { // King capture
+    } else { // King capture or other win conditions
         message = `${winnerName} kazandı!`;
     }
     winnerText.innerText = message;

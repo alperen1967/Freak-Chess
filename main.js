@@ -21,6 +21,7 @@ function init() {
 
     // Global listener for showing the game screen (triggered by online.js)
     document.addEventListener('showGameScreen', showGameScreenAndHideMenus);
+    document.addEventListener('opponentDisconnected', handleOpponentDisconnect);
 
     // Setup Screen Listeners
     ui.rulesGroup.addEventListener('click', handleSelection);
@@ -107,6 +108,19 @@ function handleCancelRestart() {
     ui.restartConfirmModal.classList.add('hidden');
 }
 
+function handleOpponentDisconnect() {
+    ui.winnerText.innerText = 'Rakibin bağlantısı kesildi. Kazandınız!';
+    ui.gameOverModal.classList.remove('hidden');
+    // Disable the close button so the user must wait for the redirect
+    ui.closeGameOverBtn.style.display = 'none';
+
+    setTimeout(() => {
+        ui.gameOverModal.classList.add('hidden');
+        ui.closeGameOverBtn.style.display = 'block'; // Re-enable for next time
+        returnToMenu();
+    }, 3000);
+}
+
 // --- Event Handlers for Selections ---
 
 function handleColorSelection(e) {
@@ -148,14 +162,15 @@ function updateUIBasedOnSelections() {
         ui.difficultyGroup.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
     }
 
-    // Reset all buttons to hidden by default
+    // Always show the Join Room button
+    ui.joinRoomBtnNew.classList.remove('hidden');
+
+    // Hide other buttons by default
     ui.startGameBtn.classList.add('hidden');
     ui.createRoomBtnNew.classList.add('hidden');
-    ui.joinRoomBtnNew.classList.add('hidden');
 
-    // Explicitly set visibility based on selections
+    // Explicitly set visibility for other buttons based on selections
     if (settings.mode === 'online') {
-        ui.joinRoomBtnNew.classList.remove('hidden');
         if (settings.rules) {
             ui.createRoomBtnNew.classList.remove('hidden');
         }
