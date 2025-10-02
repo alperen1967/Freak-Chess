@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- New Game Setup Screen (Initially Hidden) -->
+    <!-- New Game Setup Screen -->
     <div id="new-game-setup-screen" class="modal-overlay">
         <img src="logoo.png" alt="Freak Chess Logo" class="setup-logo">
         <p class="game-description">Oyunun Açıklaması:<br>Bu satranç modunda tek kural var. Yediğiniz taşa dönüşürsünüz.</p>
@@ -43,12 +43,12 @@
             <div class="setup-actions">
                 <button id="start-game-btn" class="hidden">Oyuna Başla!</button>
                 <button id="create-room-btn-new" class="hidden">Oda Kur</button>
-                <button id="join-room-btn-new">Odaya Katıl</button>
+                <button id="join-room-btn-new" class="hidden">Odaya Katıl</button>
             </div>
         </div>
     </div>
 
-    <!-- New Join Room Screen (Initially Hidden) -->
+    <!-- New Join Room Screen -->
     <div id="join-room-screen" class="modal-overlay hidden">
         <div class="login-container">
             <h2>Odaya Katıl</h2>
@@ -59,7 +59,7 @@
         </div>
     </div>
 
-    <!-- This modal is now only for in-game popups like color choice, king capture confirm, etc. -->
+    <!-- Game Setup Modal (for online room creation) -->
     <div id="game-setup-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <div id="room-created-screen" class="hidden">
@@ -71,7 +71,7 @@
         </div>
     </div>
 
-    <!-- New Color Selection Screen (Initially Hidden) -->
+    <!-- New Color Selection Screen -->
     <div id="color-selection" class="modal-overlay hidden">
         <div class="login-container">
             <h2>Hangi Renk Olmak İstersin?</h2>

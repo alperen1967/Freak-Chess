@@ -9,6 +9,13 @@ document.addEventListener('DOMContentLoaded', init);
 function init() {
     // Show game setup screen and connect to server
     ui.newGameSetupScreen.classList.remove('hidden');
+    ui.joinRoomScreen.classList.add('hidden');
+    ui.gameSetupModal.classList.add('hidden');
+    ui.colorSelection.classList.add('hidden');
+    ui.gameOverModal.classList.add('hidden');
+    ui.restartConfirmModal.classList.add('hidden');
+    ui.gameContainer.classList.add('hidden');
+
     connectOnline();
     document.querySelector('h1').style.display = 'none';
 
@@ -66,6 +73,9 @@ function showGameScreenAndHideMenus() {
     ui.newGameSetupScreen.classList.add('hidden');
     ui.joinRoomScreen.classList.add('hidden');
     ui.gameSetupModal.classList.add('hidden');
+    ui.colorSelection.classList.add('hidden');
+    ui.restartConfirmModal.classList.add('hidden');
+    ui.gameOverModal.classList.add('hidden');
     showGameScreen();
 }
 
@@ -145,9 +155,9 @@ function updateUIBasedOnSelections() {
 
     // Explicitly set visibility based on selections
     if (settings.mode === 'online') {
-        ui.joinRoomBtnNew.classList.remove('hidden'); // Always show Join Room in online mode
+        ui.joinRoomBtnNew.classList.remove('hidden');
         if (settings.rules) {
-            ui.createRoomBtnNew.classList.remove('hidden'); // Only show Create Room if a rule is also selected
+            ui.createRoomBtnNew.classList.remove('hidden');
         }
     } else if (settings.mode === 'ai') {
         if (settings.rules && settings.difficulty) {
